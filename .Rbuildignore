@@ -1,0 +1,6 @@
+^.vscode$
+^README.Rmd$
+^README.md$
+^dbi.extra\.code-workspace$
+^RMariaDB\.R$
+^scratch\.R$
