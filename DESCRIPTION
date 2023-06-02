@@ -11,3 +11,4 @@ Depends: DBI
 Imports: methods, RSQLite
 License: MPL-2.0
 Encoding: UTF-8
+RoxygenNote: 7.2.3

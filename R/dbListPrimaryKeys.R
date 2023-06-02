@@ -17,6 +17,7 @@ dbListPrimaryKeys <- function(conn, id, ...) {
 }
 
 
+
 #' @export
 dbListPrimaryKeys.default <- function(conn, id, ...) {
   warning("no method to discover primary keys for ", class(conn)[1],
@@ -31,11 +32,33 @@ dbListPrimaryKeys.default <- function(conn, id, ...) {
 dbListPrimaryKeys.SQLiteConnection <- function(conn, id, ...) {
   check_id(id)
 
+  query <- paste("SELECT name FROM pragma_table_info(%s)",
+                 "WHERE pk > 0 ORDER BY pk;")
+
   #' @importFrom DBI dbQuoteLiteral
-  query <- paste0("SELECT name FROM pragma_table_info(",
-                  dbQuoteLiteral(conn, id@name["table"]),
-                  ") WHERE pk > 0 ORDER BY pk;")
+  query <- sprintf(query, dbQuoteLiteral(conn, id@name[["table"]]))
 
   #' @importFrom DBI dbGetQuery
   dbGetQuery(conn, query)$name
+}
+
+
+
+#' @export
+"dbListPrimaryKeys.Microsoft SQL Server" <- function(conn, id, ...) {
+  check_id(id)
+  components <- id@name
+
+  xref <- c(catalog = "@table_qualifier",
+            schema = "@table_owner",
+            table = "@table_name")
+  
+  names(components) <- xref[names(components)]
+
+  #' @importFrom DBI dbQuoteString
+  statement <- paste(names(components), dbQuoteString(conn, components), sep = " = ")
+  statement <- paste("EXEC sp_pkeys", paste(statement, collapse = ", "))
+
+  #' @importFrom DBI dbGetQuery
+  dbGetQuery(conn, statement)$COLUMN_NAME
 }

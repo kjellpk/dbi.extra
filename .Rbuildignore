@@ -3,4 +3,5 @@
 ^README.md$
 ^dbi.extra\.code-workspace$
 ^RMariaDB\.R$
+^Id\.R$
 ^scratch\.R$

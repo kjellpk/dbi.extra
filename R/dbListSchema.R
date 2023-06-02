@@ -1,13 +1,11 @@
 #' List Database Schema
 #'
-#' @description List a database schema by table including column names
-#'              and primary keys.
+#' @description List a database schema by table including column names.
 #'
 #' @param conn a \code{DBIConnection}.
 #'
-#' @param prefix an \code{\link[DBI]{Id}} specifying a database schema.
-#'               See the output from \code{\link[DBI]{dbListObjects}} when
-#'               \code{is_prefix} is \code{TRUE}.
+#' @param prefix an \code{\link[DBI]{Id}} specifying fully qualified path
+#'               in the database's namespace, or NULL.
 #'
 #' @param \dots additional arguements.
 #'
@@ -31,11 +29,38 @@ dbListSchema.default <- function(conn, prefix = NULL, ...) {
   fields <- lapply(schema$table, function(u, v) dbListFields(v, u), v = conn)
   schema <- cbind(schema, column_names = I(fields))
 
-  pk <- lapply(schema$table, function(u, v) dbListPrimaryKeys(v, u), v = conn)
-  schema <- cbind(schema, primary_keys = I(pk))
-
   schema
 }
+
+
+
+#' @export
+"dbListSchema.Microsoft SQL Server" <- function(conn, prefix = NULL, ...) {
+  check_id(prefix)
+
+  if (!is.null(prefix)) {
+    components <- prefix@name
+  } else {
+    components <- character()
+  }
+
+  if (is.na(catalog <- components["catalog"])) {
+    catalog <- dbGetInfo(conn)$dbname
+  }
+
+  q1 <- "SELECT \"TABLE_CATALOG\", \"TABLE_SCHEMA\", \"TABLE_NAME\", \"COLUMN_NAME\" AS \"column_names\"
+           FROM %s.\"INFORMATION_SCHEMA\".\"COLUMNS\""
+
+  if (!is.na(schema <- components["schema"])) {
+    q1 <- paste0(q1, "\nWHERE \"TABLE_SCHEMA\" = '", schema, "'")
+  }
+  
+  q1 <- paste0(q1, "\nORDER BY \"TABLE_CATALOG\", \"TABLE_SCHEMA\", \"TABLE_NAME\", \"ORDINAL_POSITION\"")
+  q1 <- sprintf(q1, dbQuoteIdentifier(conn, catalog))
+
+  split_by_id(dbGetQuery(conn, q1), c("TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME"))
+}
+
 
 
 #' @export
