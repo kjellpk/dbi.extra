@@ -49,7 +49,10 @@ dbListSchema.default <- function(conn, prefix = NULL, ...) {
     catalog <- dbGetInfo(conn)$dbname
   }
 
-  q1 <- "SELECT \"TABLE_CATALOG\", \"TABLE_SCHEMA\", \"TABLE_NAME\", \"COLUMN_NAME\" AS \"column_names\"
+  q1 <- "SELECT \"TABLE_CATALOG\" AS \"catalog\",
+                \"TABLE_SCHEMA\" AS \"schema\",
+                \"TABLE_NAME\" AS \"table\",
+                \"COLUMN_NAME\" AS \"column_names\"
            FROM %s.\"INFORMATION_SCHEMA\".\"COLUMNS\""
 
   if (!is.na(schema <- components["schema"])) {
@@ -59,7 +62,7 @@ dbListSchema.default <- function(conn, prefix = NULL, ...) {
   q1 <- paste0(q1, "\nORDER BY \"TABLE_CATALOG\", \"TABLE_SCHEMA\", \"TABLE_NAME\", \"ORDINAL_POSITION\"")
   q1 <- sprintf(q1, dbQuoteIdentifier(conn, catalog))
 
-  split_by_id(dbGetQuery(conn, q1), c("TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME"))
+  split_by_id(dbGetQuery(conn, q1), c("catalog", "schema", "table"))
 }
 
 
