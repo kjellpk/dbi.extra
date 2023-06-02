@@ -17,6 +17,7 @@ dbListSchema <- function(conn, prefix = NULL, ...) {
 }
 
 
+
 #' @export
 dbListSchema.default <- function(conn, prefix = NULL, ...) {
   check_id(prefix)
@@ -63,7 +64,6 @@ dbListSchema.default <- function(conn, prefix = NULL, ...) {
 
 
 
-#' @export
 dbListSchema.MariaDBConnection <- function(conn, prefix = NULL, ...) {
   check_id(prefix)
 
