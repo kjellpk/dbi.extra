@@ -2,6 +2,7 @@
 e <- new.env(parent = emptyenv())
 
 
+
 .onLoad <- function(libname, pkgname) {
   pkg_ns <- asNamespace(pkgname)
 
@@ -22,6 +23,7 @@ e <- new.env(parent = emptyenv())
 }
 
 
+
 .onUnload <- function(libpath) {
   if (!is.null(e$chinook_conn)) {
     #' @importFrom DBI dbDisconnect
@@ -31,7 +33,9 @@ e <- new.env(parent = emptyenv())
   NULL
 }
 
-#' Path to Chinook SQLite sample file in the \pkg{dbi.extra} package
+
+
+#' Chinook SQLite sample database in the \pkg{dbi.extra} package
 #' @usage chinook
 #' @name chinook
 #' @export

@@ -10,25 +10,35 @@
 #'
 #' @section Value: a compact representation of the foreign keys.
 #'
+#' @rdname dbListForeignKeys
+#'
 #' @export
-dbListForeignKeys <- function(conn, id, ...) {
-  UseMethod("dbListForeignKeys")
+setGeneric(name = "dbListForeignKeys",
+           valueClass = "data.frame",
+           def = function(conn, id, ...) standardGeneric("dbListForeignKeys"))
+
+#' @importFrom methods setGeneric .valueClassTest
+
+
+
+dbListForeignKeys_default <- function(conn, id, ...) {
+  data.frame(id = I(list()), primary = I(list()), foreign = I(list()))
 }
 
 
 
+#' @importFrom methods setMethod
+#' @importClassesFrom DBI DBIConnection
+#' @rdname dbListForeignKeys
+#' @aliases dbListForeignKeys,DBIConnection,Id-method
 #' @export
-dbListForeignKeys.default <- function(conn, id, ...) {
-  warning("no method to look up foreign keys for ", class(conn)[1],
-          " connection")
-
-  NULL
-}
+setMethod(f = "dbListForeignKeys",
+          signature = c(conn = "DBIConnection", id = "Id"),
+          definition = dbListForeignKeys_default)
 
 
 
-#' @export
-dbListForeignKeys.SQLiteConnection <- function(conn, id, ...) {
+dbListForeignKeys_SQLiteConnection <- function(conn, id, ...) {
   check_id(id)
 
   query <- "SELECT `table`, `to` AS `primary`, `from` AS `foreign`
@@ -43,15 +53,25 @@ dbListForeignKeys.SQLiteConnection <- function(conn, id, ...) {
 
 
 
+#' @importFrom methods setMethod
+#' @importClassesFrom RSQLite SQLiteConnection
+#' @rdname dbListForeignKeys
+#' @aliases dbListForeignKeys,SQLiteConnection,Id-method
 #' @export
-"dbListForeignKeys.Microsoft SQL Server" <- function(conn, id, ...) {
+setMethod(f = "dbListForeignKeys",
+          signature = c(conn = "SQLiteConnection", id = "Id"),
+          definition = dbListForeignKeys_SQLiteConnection)
+
+
+
+dbListForeignKeys_Microsoft_SQL_Server <- function(conn, id, ...) {
   check_id(id)
   components <- id@name
 
   xref <- c(catalog = "@fktable_qualifier",
             schema = "@fktable_owner",
             table = "@fktable_name")
-  
+
   names(components) <- xref[names(components)]
 
   #' @importFrom DBI dbQuoteString
@@ -65,3 +85,11 @@ dbListForeignKeys.SQLiteConnection <- function(conn, id, ...) {
 
   split_by_id(fk, c("catalog", "schema", "table"))
 }
+
+
+
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = "dbListForeignKeys",
+          signature = c(conn = "Microsoft SQL Server", id = "Id"),
+          definition = dbListForeignKeys_Microsoft_SQL_Server)

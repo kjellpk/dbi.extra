@@ -11,15 +11,21 @@
 #'
 #' @section Value: a compact representation of the database schema.
 #'
+#' @rdname dbListSchema
+#'
 #' @export
-dbListSchema <- function(conn, prefix = NULL, ...) {
-  UseMethod("dbListSchema")
-}
+setGeneric(name = "dbListSchema",
+           def = function(conn, prefix = NULL, ...) {
+                   standardGeneric("dbListSchema")
+                 },
+           valueClass = "data.frame",
+           signature = "conn")
+
+#' @importFrom methods setGeneric .valueClassTest
 
 
 
-#' @export
-dbListSchema.default <- function(conn, prefix = NULL, ...) {
+dbListSchema_default <- function(conn, prefix = NULL, ...) {
   check_id(prefix)
 
   #' @importFrom DBI dbListObjects
@@ -35,8 +41,18 @@ dbListSchema.default <- function(conn, prefix = NULL, ...) {
 
 
 
+#' @importFrom methods setMethod
+#' @importClassesFrom DBI DBIConnection
+#' @rdname dbListSchema
+#' @aliases dbListSchema,DBIConnection,Id-method
 #' @export
-"dbListSchema.Microsoft SQL Server" <- function(conn, prefix = NULL, ...) {
+setMethod(f = "dbListSchema",
+          signature = c(conn = "DBIConnection"),
+          definition = dbListSchema_default)
+
+
+
+dbListSchema_Microsoft_SQL_Server <- function(conn, prefix = NULL, ...) {
   check_id(prefix)
 
   if (!is.null(prefix)) {
@@ -46,6 +62,7 @@ dbListSchema.default <- function(conn, prefix = NULL, ...) {
   }
 
   if (is.na(catalog <- components["catalog"])) {
+    #' @importFrom DBI dbGetInfo
     catalog <- dbGetInfo(conn)$dbname
   }
 
@@ -58,42 +75,18 @@ dbListSchema.default <- function(conn, prefix = NULL, ...) {
   if (!is.na(schema <- components["schema"])) {
     q1 <- paste0(q1, "\nWHERE \"TABLE_SCHEMA\" = '", schema, "'")
   }
-  
+
   q1 <- paste0(q1, "\nORDER BY \"TABLE_CATALOG\", \"TABLE_SCHEMA\", \"TABLE_NAME\", \"ORDINAL_POSITION\"")
+  #' @importFrom DBI dbQuoteIdentifier
   q1 <- sprintf(q1, dbQuoteIdentifier(conn, catalog))
 
+  #' @importFrom DBI dbGetQuery
   split_by_id(dbGetQuery(conn, q1), c("catalog", "schema", "table"))
 }
 
 
-
-dbListSchema.MariaDBConnection <- function(conn, prefix = NULL, ...) {
-  check_id(prefix)
-
-  cols <- c("TABLE_SCHEMA", "TABLE_NAME", "COLUMN_NAME", "COLUMN_KEY")
-  o <- c("TABLE_SCHEMA", "TABLE_NAME", "ORDINAL_POSITION")
-  #' @importFrom DBI Id
-  from <- Id(schema = "information_schema", table = "COLUMNS")
-
-  if (is.null(prefix)) {
-    prefix <- "DATABASE()"
-  } else {
-    #' @importFrom DBI dbQuoteString
-    prefix <- dbQuoteString(conn, prefix@name[["schema"]])
-  }
-
-  #' @importFrom DBI dbQuoteIdentifier
-  query <- paste("SELECT",
-                 paste(dbQuoteIdentifier(conn, cols), collapse = ", "),
-                 "FROM",
-                 dbQuoteIdentifier(conn, from),
-                 "WHERE TABLE_SCHEMA =",
-                 prefix,
-                 "ORDER BY",
-                 paste(dbQuoteIdentifier(conn, o), collapse = ", "))
-
-  #' @importFrom DBI dbGetQuery
-  schema <- dbGetQuery(conn, query)
-
-  split_by_id(schema, idcols = c("TABLE_SCHEMA", "TABLE_NAME"))
-}
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = "dbListSchema",
+          signature = c(conn = "Microsoft SQL Server"),
+          definition = dbListSchema_Microsoft_SQL_Server)

@@ -11,26 +11,36 @@
 #' @section Value: a character vector containing the names of the primary
 #'                 key columns.
 #'
+#' @rdname dbListPrimaryKeys
 #' @export
-dbListPrimaryKeys <- function(conn, id, ...) {
-  UseMethod("dbListPrimaryKeys")
+setGeneric(name = "dbListPrimaryKeys",
+           valueClass = "character",
+           def = function(conn, id, ...) standardGeneric("dbListPrimaryKeys"))
+
+#' @importFrom methods setGeneric .valueClassTest
+
+
+
+dbListPrimaryKeys_default <- function(conn, id, ...) {
+  character(0)
 }
 
 
 
+#' @importFrom methods setMethod
+#' @importClassesFrom DBI DBIConnection
+#' @rdname dbListPrimaryKeys
+#' @aliases dbListPrimaryKeys,DBIConnection,Id-method
 #' @export
-dbListPrimaryKeys.default <- function(conn, id, ...) {
-  warning("no method to discover primary keys for ", class(conn)[1],
-          " connections")
-
-  NULL
-}
+setMethod(f = "dbListPrimaryKeys",
+          signature = c(conn = "DBIConnection", id = "Id"),
+          definition = dbListPrimaryKeys_default)
 
 
 
-#' @export
-dbListPrimaryKeys.SQLiteConnection <- function(conn, id, ...) {
+dbListPrimaryKeys_SQLiteConnection <- function(conn, id, ...) {
   check_id(id)
+
 
   query <- paste("SELECT name FROM pragma_table_info(%s)",
                  "WHERE pk > 0 ORDER BY pk;")
@@ -44,15 +54,24 @@ dbListPrimaryKeys.SQLiteConnection <- function(conn, id, ...) {
 
 
 
+#' @importFrom methods setMethod
+#' @rdname dbListPrimaryKeys
+#' @aliases dbListPrimaryKeys,SQLiteConnection,Id-method
 #' @export
-"dbListPrimaryKeys.Microsoft SQL Server" <- function(conn, id, ...) {
+setMethod(f = "dbListPrimaryKeys",
+          signature = c(conn = "SQLiteConnection", id = "Id"),
+          definition = dbListPrimaryKeys_SQLiteConnection)
+
+
+
+dbListPrimaryKeys_Microsoft_SQL_Server <- function(conn, id, ...) {
   check_id(id)
   components <- id@name
 
   xref <- c(catalog = "@table_qualifier",
             schema = "@table_owner",
             table = "@table_name")
-  
+
   names(components) <- xref[names(components)]
 
   #' @importFrom DBI dbQuoteString
@@ -62,3 +81,11 @@ dbListPrimaryKeys.SQLiteConnection <- function(conn, id, ...) {
   #' @importFrom DBI dbGetQuery
   dbGetQuery(conn, statement)$COLUMN_NAME
 }
+
+
+
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = "dbListPrimaryKeys",
+          signature = c(conn = "Microsoft SQL Server", id = "Id"),
+          definition = dbListPrimaryKeys_Microsoft_SQL_Server)

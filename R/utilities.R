@@ -30,10 +30,11 @@ split_by_id <- function(x, idcols) {
 }
 
 
+
 check_id <- function(id) {
   #' @importFrom methods is
   #' @importFrom DBI Id
-  if (!is.null(id) & !is(id, "Id")) {
+  if (!is.null(id) && !is(id, "Id")) {
     stop(sQuote("id"), " arguement is not an ", sQuote("Id"))
   }
 
