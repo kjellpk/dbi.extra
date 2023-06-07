@@ -39,8 +39,8 @@ vignettes/*.pdf
 .Renviron
 
 # Package Generated
-NAMESPACE
-/man/
+# NAMESPACE
+# /man/
 
 # Mac Specific
 .DS_Store
