@@ -1,12 +1,12 @@
 Package: dbi.extra
 Type: Package
 Title: Stuff I Wish Was In DBI
-Version: 0.1
+Version: 0.1.0
 Author: Kjell P. Konis
 Maintainer: Kjell P. Konis <kjellk@gmail.com>
 Description: Extensions in the style of dbListObjects for listing
              schemas and looking up table keys. The full scope of
-             the package has not been decided.
+             the package has not been decided. Very beta.
 Depends: DBI
 Imports: methods, RSQLite, odbc
 License: MPL-2.0
