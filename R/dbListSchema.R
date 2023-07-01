@@ -31,12 +31,12 @@ dbListSchema_default <- function(conn, prefix = NULL, ...) {
   #' @importFrom DBI dbListObjects
   schema <- dbListObjects(conn, prefix = prefix, ...)
   schema <- schema[!schema$is_prefix, "table", drop = FALSE]
+  names(schema) <- "id"
 
   #' @importFrom DBI dbListFields
-  fields <- lapply(schema$table, function(u, v) dbListFields(v, u), v = conn)
-  schema <- cbind(schema, column_names = I(fields))
-
-  schema
+  fields <- lapply(schema$id, function(u, v) dbListFields(v, u), v = conn)
+  
+  cbind(schema, column_names = I(fields))
 }
 
 
